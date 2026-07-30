@@ -1,0 +1,22 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+
+# Node
+node_modules/
+dist/
+
+# Logs
+*.log
+
+# User files
+*.user
+*.suo
+
+# Environment
+.env
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,9 @@
+﻿namespace RestaurantManagementSystem.DTOs
+{
+    public class CreateTableRequest
+    {
+        public int TableNumber { get; set; }
+
+        public int Capacity { get; set; }
+    }
+}
