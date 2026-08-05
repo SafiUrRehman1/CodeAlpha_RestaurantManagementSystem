@@ -1,5 +1,5 @@
 import Sidebar from "../components/Sidebar";
-import Navbar from "../components/AdminNavbar";
+import AdminNavbar from "../components/AdminNavbar";
 
 export default function AdminLayout({ children }) {
   return (
@@ -9,7 +9,7 @@ export default function AdminLayout({ children }) {
 
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        <Navbar />
+        <AdminNavbar />
 
         <main className="flex-1 overflow-y-auto p-8">
           {children}

@@ -20,19 +20,19 @@ namespace RestaurantManagementSystem
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(); builder.Services.AddSwaggerGen(options =>
-            {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "Enter JWT Token"
-                });
+            builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT Token"
+    });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -46,7 +46,7 @@ namespace RestaurantManagementSystem
             Array.Empty<string>()
         }
     });
-            });
+});
 
             // JWT Authentication Configuration
             var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -80,16 +80,15 @@ namespace RestaurantManagementSystem
             });
 
             builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("ReactPolicy",
-                    policy =>
-                    {
-                        policy.WithOrigins(
-                                   "http://localhost:5173")
-                                .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
-            });
+{
+    options.AddPolicy("ReactPolicy", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
             var app = builder.Build();
 

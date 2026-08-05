@@ -49,6 +49,7 @@ export default function Reservations() {
 
       toast.success("Reservation created successfully.");
       navigate("/customer/my-reservations");
+      
     } catch (error) {
       console.log(error);
 
