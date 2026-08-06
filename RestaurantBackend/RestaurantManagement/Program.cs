@@ -80,15 +80,14 @@ namespace RestaurantManagementSystem
             });
 
             builder.Services.AddCors(options =>
-{
-    options.AddPolicy("ReactPolicy", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+            {
+                options.AddPolicy("ReactPolicy", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             var app = builder.Build();
 
