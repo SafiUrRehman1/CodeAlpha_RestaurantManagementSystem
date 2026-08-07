@@ -8,6 +8,8 @@ export default defineConfig({
     tailwindcss(),
   ],
 
+  base: "/RestaurantFrontend/",
+
   server: {
     port: 5173,
   },
