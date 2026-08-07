@@ -10,13 +10,15 @@ import { CartProvider } from "./context/CartContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/CodeAlpha_RestaurantManagementSystem">
       <CartProvider>
         <App />
+
         <Toaster
           position="top-right"
           reverseOrder={false}
         />
+
       </CartProvider>
     </BrowserRouter>
   </React.StrictMode>
