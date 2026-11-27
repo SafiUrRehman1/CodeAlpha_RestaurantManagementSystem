@@ -34,31 +34,24 @@ export default function CustomerNavbar() {
     { name: "My Orders", path: "/customer/my-orders" },
   ];
 
-  const navClass = ({ isActive }) =>
-    `relative py-2 text-sm font-semibold transition-colors duration-200 ${
-      isActive
-        ? "text-[#B95F3B]"
-        : "text-[#51483F] hover:text-[#B95F3B]"
-    }`;
-
   return (
-    <header className="sticky top-0 z-50 bg-[#F5F0E7]/95 backdrop-blur-md border-b border-[#E9E1D7]">
-
+    <header className="sticky top-0 z-50 bg-[#F5F0E7]/95 backdrop-blur-md border-b border-[#E9E1D7] shadow-[0_2px_12px_rgba(37,34,31,0.04)]">
       <div className="max-w-7xl mx-auto px-5 md:px-8 h-[76px] flex items-center justify-between">
 
         {/* BRAND */}
-
         <button
           onClick={() => navigate("/customer/home")}
-          className="flex items-center gap-3"
+          className="flex items-center gap-3 group"
         >
-          <div className="w-11 h-11 rounded-xl bg-[#25221F] flex items-center justify-center text-white">
+          <div className="w-11 h-11 rounded-xl bg-[#25221F] flex items-center justify-center text-white transition-all duration-300 group-hover:bg-[#B95F3B] group-hover:rotate-[-5deg]">
             <Utensils size={23} />
           </div>
 
           <div className="text-left">
-            <h1 className="font-bold text-xl md:text-2xl text-[#25221F] leading-tight"
-                style={{ fontFamily: "var(--font-heading)" }}>
+            <h1
+              className="font-bold text-xl md:text-2xl text-[#25221F] leading-tight"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
               Restaurant
             </h1>
             <p className="text-[10px] tracking-[3px] uppercase text-[#B95F3B] font-semibold">
@@ -68,26 +61,40 @@ export default function CustomerNavbar() {
         </button>
 
         {/* DESKTOP NAVIGATION */}
-
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-2">
           {links.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
-              className={navClass}
+              className={({ isActive }) =>
+                `relative px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-300 group ${
+                  isActive
+                    ? "text-[#B95F3B] bg-[#B95F3B]/[0.07]"
+                    : "text-[#51483F] hover:text-[#B95F3B] hover:bg-white/70"
+                }`
+              }
             >
-              {link.name}
+              {({ isActive }) => (
+                <>
+                  {link.name}
+                  <span
+                    className={`absolute bottom-1 left-4 right-4 h-[2px] rounded-full bg-[#B95F3B] transition-transform duration-300 origin-left ${
+                      isActive
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* DESKTOP ACTIONS */}
-
-        <div className="hidden lg:flex items-center gap-5">
-
+        <div className="hidden lg:flex items-center gap-4">
           <button
             onClick={() => navigate("/customer/cart")}
-            className="relative p-2 text-[#39332E] hover:text-[#B95F3B] transition"
+            className="relative p-2.5 rounded-full text-[#39332E] hover:text-[#B95F3B] hover:bg-[#B95F3B]/10 transition-all duration-300"
             aria-label="Shopping cart"
           >
             <ShoppingCart size={22} />
@@ -95,9 +102,9 @@ export default function CustomerNavbar() {
 
           <NavLink
             to="/customer/profile"
-            className="flex items-center gap-2 px-3 py-2 rounded-full border border-[#E9E1D7] hover:border-[#B95F3B] transition"
+            className="flex items-center gap-2 px-3 py-2 rounded-full border border-[#E9E1D7] hover:border-[#B95F3B] hover:bg-white/70 transition-all duration-300"
           >
-            <div className="w-8 h-8 rounded-full bg-[#EBD8C9] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-[#EBD8C9] flex items-center justify-center transition-colors duration-300">
               <User size={17} className="text-[#98472B]" />
             </div>
 
@@ -110,7 +117,7 @@ export default function CustomerNavbar() {
 
           <button
             onClick={handleLogout}
-            className="text-[#81776D] hover:text-red-600 transition"
+            className="p-2 rounded-full text-[#81776D] hover:text-red-600 hover:bg-red-50 transition-all duration-300"
             title="Logout"
             aria-label="Logout"
           >
@@ -119,11 +126,10 @@ export default function CustomerNavbar() {
         </div>
 
         {/* MOBILE ACTIONS */}
-
         <div className="flex lg:hidden items-center gap-4">
           <button
             onClick={() => navigate("/customer/cart")}
-            className="text-[#39332E]"
+            className="p-2 rounded-full text-[#39332E] hover:text-[#B95F3B] hover:bg-white/70 transition-all"
             aria-label="Shopping cart"
           >
             <ShoppingCart size={22} />
@@ -131,20 +137,17 @@ export default function CustomerNavbar() {
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="text-[#25221F]"
+            className="p-2 rounded-full text-[#25221F] hover:bg-white/70 transition-all"
             aria-label="Toggle navigation"
           >
             {mobileOpen ? <X size={25} /> : <Menu size={25} />}
           </button>
         </div>
-
       </div>
 
       {/* MOBILE MENU */}
-
       {mobileOpen && (
         <div className="lg:hidden border-t border-[#E9E1D7] bg-[#F5F0E7] px-6 py-5">
-
           <nav className="flex flex-col gap-2">
             {links.map((link) => (
               <NavLink
@@ -152,10 +155,10 @@ export default function CustomerNavbar() {
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
-                  `px-4 py-3 rounded-lg text-sm font-semibold transition ${
+                  `px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                     isActive
-                      ? "bg-[#B95F3B]/10 text-[#B95F3B]"
-                      : "text-[#51483F] hover:bg-white"
+                      ? "bg-[#B95F3B]/10 text-[#B95F3B] border-l-[3px] border-[#B95F3B]"
+                      : "text-[#51483F] hover:bg-white hover:text-[#B95F3B] hover:translate-x-1"
                   }`
                 }
               >
@@ -166,23 +169,21 @@ export default function CustomerNavbar() {
             <NavLink
               to="/customer/profile"
               onClick={() => setMobileOpen(false)}
-              className="px-4 py-3 rounded-lg text-sm font-semibold text-[#51483F] hover:bg-white"
+              className="px-4 py-3 rounded-xl text-sm font-semibold text-[#51483F] hover:bg-white hover:text-[#B95F3B] transition-all"
             >
               My Profile
             </NavLink>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 text-red-600 text-sm font-semibold"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 text-sm font-semibold hover:bg-red-50 transition-all"
             >
               <LogOut size={18} />
               Logout
             </button>
           </nav>
-
         </div>
       )}
-
     </header>
   );
 }
