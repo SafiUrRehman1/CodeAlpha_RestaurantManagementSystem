@@ -1,186 +1,284 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import {
-  Search,
   CalendarDays,
-  RefreshCcw,
+  Search,
+  RefreshCw,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  CalendarCheck,
+  AlertCircle,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import api from "../../services/api";
 import AdminLayout from "../../layouts/AdminLayout";
-import DashboardCard from "../../components/DashboardCard";
 import ReservationsTable from "../../components/ReservationsTable";
 import EditReservationModal from "../../components/EditReservationModal";
 
 export default function Reservations() {
   const [reservations, setReservations] = useState([]);
-
   const [search, setSearch] = useState("");
-
   const [statusFilter, setStatusFilter] = useState("All");
-
-  const [selectedReservation, setSelectedReservation] =
-    useState(null);
-
+  const [selectedReservation, setSelectedReservation] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadReservations() {
+    try {
+      setError("");
+      const response = await api.get("/Reservations/admin");
+      setReservations(
+        Array.isArray(response.data) ? response.data : []
+      );
+    } catch (err) {
+      console.error("Failed to load reservations:", err);
+      setError("Unable to load reservations. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     loadReservations();
   }, []);
 
-  async function loadReservations() {
-    try {
-      const response = await api.get("/Reservations/admin");
+  const stats = useMemo(() => ({
+    total: reservations.length,
+    pending: reservations.filter((r) => r.status === "Pending").length,
+    confirmed: reservations.filter((r) => r.status === "Confirmed").length,
+    completed: reservations.filter((r) => r.status === "Completed").length,
+    cancelled: reservations.filter((r) => r.status === "Cancelled").length,
+  }), [reservations]);
 
-      setReservations(response.data);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  const filteredReservations = useMemo(() => {
+    return reservations.filter((reservation) => {
+      const customerName = (reservation.userName || "").toLowerCase();
+      const searchTerm = search.trim().toLowerCase();
 
-  const pendingCount =
-    reservations.filter(r => r.status === "Pending").length;
+      const matchesSearch =
+        customerName.includes(searchTerm) ||
+        String(reservation.id).includes(searchTerm) ||
+        String(reservation.tableId).includes(searchTerm);
 
-  const confirmedCount =
-    reservations.filter(r => r.status === "Confirmed").length;
+      const matchesStatus =
+        statusFilter === "All" ||
+        reservation.status === statusFilter;
 
-  const completedCount =
-    reservations.filter(r => r.status === "Completed").length;
+      return matchesSearch && matchesStatus;
+    });
+  }, [reservations, search, statusFilter]);
 
-  const cancelledCount =
-    reservations.filter(r => r.status === "Cancelled").length;
-
-  const filteredReservations = reservations.filter(r => {
-
-    const matchesSearch =
-      r.userName
-        ?.toLowerCase()
-        .includes(search.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "All"
-        ? true
-        : r.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-
-  });
+  const statCards = [
+    {
+      label: "Total Reservations",
+      value: stats.total,
+      icon: CalendarDays,
+      color: "text-[#B95F3B]",
+      bg: "bg-orange-50",
+    },
+    {
+      label: "Pending",
+      value: stats.pending,
+      icon: Clock,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+    {
+      label: "Confirmed",
+      value: stats.confirmed,
+      icon: CalendarCheck,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Completed",
+      value: stats.completed,
+      icon: CheckCircle2,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: "Cancelled",
+      value: stats.cancelled,
+      icon: XCircle,
+      color: "text-red-600",
+      bg: "bg-red-50",
+    },
+  ];
 
   return (
     <AdminLayout>
+      <div className="mx-auto max-w-7xl space-y-7">
 
-      {/* Header */}
+        {/* Header */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-[#B95F3B]">
+              <CalendarDays size={18} />
+              Restaurant Management
+            </div>
 
-      <div className="flex justify-between items-center">
+            <h1 className="font-serif text-3xl font-bold text-[#25221F] sm:text-4xl">
+              Reservations
+            </h1>
 
-        <div>
-
-          <h1 className="text-5xl font-bold flex items-center gap-3">
-
-            <CalendarDays className="text-purple-600"/>
-
-            Reservations
-
-          </h1>
-
-          <p className="text-gray-500 mt-2">
-            Manage customer reservations
-          </p>
-
-        </div>
-
-        <button
-          onClick={loadReservations}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
-        >
-          <RefreshCcw size={18}/>
-          Refresh
-        </button>
-
-      </div>
-
-      {/* Dashboard */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-8">
-
-        <DashboardCard
-          title="Pending"
-          value={pendingCount}
-          color="text-yellow-600"
-        />
-
-        <DashboardCard
-          title="Confirmed"
-          value={confirmedCount}
-          color="text-blue-600"
-        />
-
-        <DashboardCard
-          title="Completed"
-          value={completedCount}
-          color="text-green-600"
-        />
-
-        <DashboardCard
-          title="Cancelled"
-          value={cancelledCount}
-          color="text-red-600"
-        />
-
-      </div>
-
-      {/* Table */}
-
-      <div className="bg-white rounded-2xl shadow-lg mt-8 p-6">
-
-        <div className="flex justify-between mb-6">
-
-          <div className="relative w-80">
-
-            <Search
-              className="absolute left-3 top-3 text-gray-400"
-              size={20}
-            />
-
-            <input
-              type="text"
-              placeholder="Search customer..."
-              value={search}
-              onChange={(e)=>setSearch(e.target.value)}
-              className="w-full border rounded-xl pl-10 py-3 pr-4"
-            />
-
+            <p className="mt-2 text-sm text-gray-500 sm:text-base">
+              Manage bookings, confirm tables, and track reservation status.
+            </p>
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e)=>setStatusFilter(e.target.value)}
-            className="border rounded-xl px-4 py-3"
+          <button
+            onClick={() => {
+              setLoading(true);
+              loadReservations();
+            }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-[#25221F] transition hover:bg-[#F5F0E7] sm:w-auto"
           >
-            <option>All</option>
-            <option>Pending</option>
-            <option>Confirmed</option>
-            <option>Completed</option>
-            <option>Cancelled</option>
-          </select>
-
+            <RefreshCw size={17} />
+            Refresh
+          </button>
         </div>
 
-        <ReservationsTable
-          reservations={filteredReservations}
-          loadReservations={loadReservations}
-          setSelectedReservation={setSelectedReservation}
-          setShowModal={setShowModal}
-        />
+        {/* Statistics */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {statCards.map((card) => {
+            const Icon = card.icon;
 
+            return (
+              <div
+                key={card.label}
+                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-gray-500">{card.label}</p>
+                    <p className="mt-2 text-3xl font-bold text-[#25221F]">
+                      {card.value}
+                    </p>
+                  </div>
+
+                  <div className={`rounded-xl p-3 ${card.bg} ${card.color}`}>
+                    <Icon size={22} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Reservations List */}
+        <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="border-b border-gray-100 p-5 sm:p-6">
+            <h2 className="text-lg font-bold text-[#25221F]">
+              All Reservations
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Search bookings and update their reservation status.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  size={19}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Search customer, reservation ID, or table..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-[#FAF8F4] py-3 pl-11 pr-4 text-sm outline-none transition focus:border-[#B95F3B] focus:ring-2 focus:ring-[#B95F3B]/10"
+                />
+              </div>
+
+              <div className="relative sm:w-52">
+                <SlidersHorizontal
+                  size={17}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-gray-200 bg-[#FAF8F4] py-3 pl-10 pr-4 text-sm text-gray-700 outline-none focus:border-[#B95F3B]"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {error ? (
+            <div className="p-8 text-center">
+              <AlertCircle className="mx-auto mb-3 text-red-500" size={32} />
+              <p className="text-sm text-gray-600">{error}</p>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  loadReservations();
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#B95F3B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#984A2D]"
+              >
+                <RefreshCw size={16} />
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center gap-3 p-12 text-sm text-gray-500">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#B95F3B] border-t-transparent" />
+              Loading reservations...
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6">
+                <p className="text-sm text-gray-500">
+                  Showing{" "}
+                  <span className="font-semibold text-[#25221F]">
+                    {filteredReservations.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-[#25221F]">
+                    {reservations.length}
+                  </span>{" "}
+                  reservations
+                </p>
+
+                {(search || statusFilter !== "All") && (
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      setStatusFilter("All");
+                    }}
+                    className="text-sm font-semibold text-[#B95F3B] hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+
+              <ReservationsTable
+                reservations={filteredReservations}
+                loadReservations={loadReservations}
+                setSelectedReservation={setSelectedReservation}
+                setShowModal={setShowModal}
+              />
+            </>
+          )}
+        </section>
       </div>
 
       <EditReservationModal
         isOpen={showModal}
         reservation={selectedReservation}
         loadReservations={loadReservations}
-        onClose={()=>setShowModal(false)}
+        onClose={() => setShowModal(false)}
       />
-
     </AdminLayout>
   );
 }

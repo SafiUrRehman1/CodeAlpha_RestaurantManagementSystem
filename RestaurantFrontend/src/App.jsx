@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Public Pages
 import Login from "./pages/Login";
@@ -34,8 +35,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
 
+      <Routes>
       {/* ================= PUBLIC ================= */}
 
       <Route path="/" element={<Login />} />
@@ -232,7 +235,8 @@ function App() {
   path="*"
   element={<h1 className="text-center mt-10">404 - Page Not Found</h1>}
 />
-    </Routes>
+       </Routes>
+    </>
   );
 }
 
