@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { X, Pencil, AlertCircle } from "lucide-react";
+import { X, Pencil, AlertCircle, ImagePlus, Link as LinkIcon } from "lucide-react";
 import api from "../services/api";
 
 export default function EditMenuModal({
@@ -12,6 +12,10 @@ export default function EditMenuModal({
   const [itemName, setItemName] = useState("");
   const [price, setPrice] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
+  const [imageMode, setImageMode] = useState("keep");
+  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,11 +24,49 @@ export default function EditMenuModal({
       setItemName(selectedItem.itemName || "");
       setPrice(String(selectedItem.price ?? ""));
       setIsAvailable(Boolean(selectedItem.isAvailable));
+      setImageMode("keep");
+      setImageFile(null);
+      setImageUrl("");
+      setPreview("");
       setError("");
     }
   }, [selectedItem]);
 
+  useEffect(() => {
+    if (!imageFile) {
+      setPreview("");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(imageFile);
+    setPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [imageFile]);
+
   if (!isOpen || !selectedItem) return null;
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, PNG, and WEBP images are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Image size cannot exceed 2 MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setError("");
+    setImageFile(file);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -32,11 +74,21 @@ export default function EditMenuModal({
     setError("");
 
     try {
-      await api.put(`/menu/${selectedItem.id}`, {
-        itemName: itemName.trim(),
-        price: Number(price),
-        isAvailable,
-      });
+      const formData = new FormData();
+
+      formData.append("ItemName", itemName.trim());
+      formData.append("Price", String(Number(price)));
+      formData.append("IsAvailable", String(isAvailable));
+
+      if (imageMode === "upload" && imageFile) {
+        formData.append("ImageFile", imageFile);
+      }
+
+      if (imageMode === "url" && imageUrl.trim()) {
+        formData.append("ImageUrl", imageUrl.trim());
+      }
+
+      await api.put(`/menu/${selectedItem.id}`, formData);
 
       await loadMenuItems();
       onClose();
@@ -44,7 +96,8 @@ export default function EditMenuModal({
       setError(
         typeof err.response?.data === "string"
           ? err.response.data
-          : "Unable to update menu item. Please try again."
+          : err.response?.data?.title ||
+            "Unable to update menu item. Please try again."
       );
     } finally {
       setLoading(false);
@@ -64,7 +117,7 @@ export default function EditMenuModal({
                 Edit Menu Item
               </h2>
               <p className="mt-1 text-xs text-gray-500">
-                Update the dish details and availability
+                Update dish details, image and availability
               </p>
             </div>
           </div>
@@ -116,6 +169,137 @@ export default function EditMenuModal({
             />
           </div>
 
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
+              Menu Item Image
+            </label>
+
+            {imageMode === "keep" && selectedItem.imageUrl && (
+              <div className="mb-3">
+                <p className="mb-2 text-xs text-gray-500">Current image</p>
+                <img
+                  src={selectedItem.imageUrl}
+                  alt={selectedItem.itemName}
+                  className="h-36 w-full rounded-xl object-cover"
+                />
+              </div>
+            )}
+
+            <div className="mb-3 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setImageMode("keep");
+                  setImageFile(null);
+                  setImageUrl("");
+                  setError("");
+                }}
+                className={`rounded-xl border px-2 py-3 text-xs font-semibold transition ${
+                  imageMode === "keep"
+                    ? "border-[#B95F3B] bg-orange-50 text-[#B95F3B]"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Keep Current
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setImageMode("upload");
+                  setImageFile(null);
+                  setImageUrl("");
+                  setError("");
+                }}
+                className={`flex items-center justify-center gap-1 rounded-xl border px-2 py-3 text-xs font-semibold transition ${
+                  imageMode === "upload"
+                    ? "border-[#B95F3B] bg-orange-50 text-[#B95F3B]"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <ImagePlus size={15} />
+                Upload
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setImageMode("url");
+                  setImageFile(null);
+                  setError("");
+                }}
+                className={`flex items-center justify-center gap-1 rounded-xl border px-2 py-3 text-xs font-semibold transition ${
+                  imageMode === "url"
+                    ? "border-[#B95F3B] bg-orange-50 text-[#B95F3B]"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <LinkIcon size={15} />
+                URL
+              </button>
+            </div>
+
+            {imageMode === "upload" && (
+              <div>
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-[#FAF8F4] px-4 py-6 text-center transition hover:border-[#B95F3B]">
+                  <ImagePlus size={25} className="mb-2 text-[#B95F3B]" />
+                  <span className="text-sm font-semibold text-gray-700">
+                    Choose a replacement image
+                  </span>
+                  <span className="mt-1 text-xs text-gray-500">
+                    JPG, PNG or WEBP · Maximum 2 MB
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {imageFile && (
+                  <p className="mt-2 truncate text-xs text-gray-500">
+                    Selected: {imageFile.name}
+                  </p>
+                )}
+
+                {preview && (
+                  <img
+                    src={preview}
+                    alt="New menu item preview"
+                    className="mt-3 h-36 w-full rounded-xl object-cover"
+                  />
+                )}
+              </div>
+            )}
+
+            {imageMode === "url" && (
+              <div>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#B95F3B] focus:ring-2 focus:ring-[#B95F3B]/10"
+                />
+
+                {imageUrl.trim() && (
+                  <img
+                    src={imageUrl}
+                    alt="New menu item preview"
+                    className="mt-3 h-36 w-full rounded-xl object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                    onLoad={(e) => {
+                      e.currentTarget.style.display = "block";
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
           <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#FAF8F4] p-4">
             <input
               type="checkbox"
@@ -140,7 +324,12 @@ export default function EditMenuModal({
 
             <button
               type="submit"
-              disabled={loading || !itemName.trim() || !price || Number(price) <= 0}
+              disabled={
+                loading ||
+                !itemName.trim() ||
+                !price ||
+                Number(price) <= 0
+              }
               className="rounded-xl bg-[#B95F3B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#984A2D] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Saving..." : "Save Changes"}

@@ -241,9 +241,7 @@ export default function Menu() {
                   <div className="relative h-56 overflow-hidden bg-[#E9E1D7]">
 
                     <img
-                      src={
-                        item.imageUrl ||
-                        "https://placehold.co/600x450/F5F0E7/25221F?text=Restaurant+Dish"
+                     src={item.imageUrl || "/images/food-placeholder.png"
                       }
                       alt={item.itemName || "Restaurant dish"}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
